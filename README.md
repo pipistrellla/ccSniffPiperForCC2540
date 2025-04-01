@@ -1,51 +1,60 @@
-ccsniffpiper
+ccsniffpiper for CC2540 (СС2540 with wireshark)
 ============
+This repository is an adaptation of the **[ccsniffpiper](https://github.com/andrewdodd/ccsniffpiper)** repository for working with the CC2540 BLE sniffer.
 
-*Live Packet Sniffer to Wireshark bridge for IEEE 802.15.4 networks.*
-
-NOTE WELL: I have implemented a new python script that does the same job as the TI Sniffer, but on the console. See **[pyCCSniffer](https://github.com/andrewdodd/pyCCSniffer)** for more details!
-
-A Python module that uses a Texas Instruments CC2531emk USB dongle to sniff packets and pipe them to (primarily) wireshark.
-
-This tool is a mashup of two existing GitHub projects:
- * **[sensniff](https://github.com/g-oikonomou/sensniff)**: A python tool by George Oikonomou to capture packets with the "sensniff" firmware for the TI CC2531 sniffer.
- * **[ccsniffer](https://github.com/christianpanton/ccsniffer)**: A python module by Christian Panton to capture packets with the original TI firmware and print them to stdout.
-
-This tool attempts to take the usefulness of the **ccsniffer** not needing different firmware to the default TI firmware (so you can still use TI's Windows-based program) and combine it with the usefulness of live Wireshark capture. It is mostly based on the **sensniff** project, as that project already had more functionality.
-
-
-Requires: pyusb >= 1.0
-
-
-
-**ccsniffpiper** can run in interactive or headless mode. In interactive mode, the user can change the radio channel while running.
-
-**ccsniffpiper** has been developed on Mac OS X. Like **sensniff**, it will probably not work on Windows (I haven't looked into whether Wireshark for Windows supports named pipes).
 
 How to Use
 ==========
-Run ccsniffpiper
-----------------
-**ccsniffpiper**'s main role it to read from the CC2531 USB packet sniffer and pipe the packets in PCAP format to a named pipe (by default "/tmp/ccsniffpiper").
+## Setting up and Running the CC2540 BLE Sniffer
 
-To get this default behaviour, just run the command:
-`python ccsniffpiper.py`
+Follow the steps below to set up your environment and start capturing BLE packets using the CC2540 sniffer.
 
-To see further information, run the help command:
-`python ccsniffpiper.py -h`
+### 1. Set up the Python virtual environment
 
+First, create and activate a virtual environment:
 
-Run Wireshark
--------------
-To receive the packets from **ccsniffpiper** you need to use Wireshark to start a capture using a FIFO file as the 'interface'. By default, **ccsniffpiper** will use `/tmp/ccsniffpiper`. 
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+Then, install the required dependencies:
+```bash
+pip install pyusb
+```
+If you get a USB permission error, please copy 99-cc2531-sniffer.rules (mb u need to write your device data) to
 
-To setup Wireshark correctly, perform the following steps:
- * Go to Capture -> options -> Manage Interfaces -> New (under Pipes) -> type `/tmp/ccsniffpiper` and save.
- * The pipe will then appear as an interface. Start a capture on it.
+- /etc/udev/rules.d 
 
-Additional settings that might be important include:
- * Open Wireshark's preferences and select 'TI CC24xx FCS format' under Protocols -> IEEE 802.15.4.
- * Enable/disable the protocols you need (e.g. when I made this tool I was not using Zigbee)
+and reload udev or reboot.
+```bash
+$ cp 99-cc2531-sniffer.rules /etc/udev/rules.d
+$ sudo udevadm control --reload-rules
+```
+otherwise reboot
+```bash
+$ sudo reboot
+sudo udevadm control --reload-rules
+```
+
+### 2. Run the Python script
+Start the Python script to begin the sniffer process:
+
+```bash
+python ccsniffpiper.py
+```
+
+### 3. Open Wireshark
+
+Open Wireshark and start capturing data from the sniffer interface. Run the following command:
+
+```bash
+sudo wireshark -k -i /tmp/ccsniffpiper
+```
+Note: You may need to use sudo depending on your system configuration.
+
+### 4. Start sniffing in the Python console
+Once Wireshark is up and running, type 's' and press "enter" in the Python console to start the sniffer (for me in VSCode).
+This will allow you to start sniffing BLE packets using the CC2540 sniffer and Wireshark.
 
 
 TI's Packet Sniffer Payload Definition
@@ -75,11 +84,7 @@ FAQs
 ### I don't see anything appearing in Wireshark!
 
  * Check that the sniffer is sniffing in the correct channel.
+ * for more information about tool visit original repo: **[ccsniffpiper](https://github.com/andrewdodd/ccsniffpiper)**
  * Check that you have opened the named pipe that is being piped to.  
-   *In particular, I would recommend reading the "Run Wireshark" section carefully.*
-   
-### Wireshark is reporting that the FCS is invalid!
-
- * **Fix this:** by opening Wireshark's preferences, and under __Protocols -> IEEE 802.15.4__ select *'TI CC24xx FCS format'*. 
- * Wireshark's default setting for the IEEE 803.15.4 protocol is that the FCS will be what radio frame would have. However, the TI chip replaces this for successfully received frames with information about RSSI, CORRELATION and FCS_OK (You can read this in section 23.9.7 Frame-Check Sequence of the [TI User Guide](https://www.ti.com/lit/pdf/swru191)).
-
+   *In particular, I would recommend reading the "How to use" section carefully.*
+ 
