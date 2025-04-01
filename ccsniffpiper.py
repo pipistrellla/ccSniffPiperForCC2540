@@ -63,7 +63,7 @@ defaults = {
     'debug_level': 'WARNING',
     'log_level': 'INFO',
     'log_file': 'ccsniffpiper.log',
-    'channel': 11,
+    'channel': 37,
 }
 
 logger = logging.getLogger(__name__)
@@ -107,13 +107,14 @@ class Frame(object):
 class PCAPHelper:
     LINKTYPE_IEEE802_15_4_NOFCS = 230
     LINKTYPE_IEEE802_15_4 = 195
+    LINKTYPE_BLUETOOTH_LE_LL = 251
     MAGIC_NUMBER = 0xA1B2C3D4
     VERSION_MAJOR = 2
     VERSION_MINOR = 4
     THISZONE = 0
     SIGFIGS = 0
     SNAPLEN = 0xFFFF
-    NETWORK = LINKTYPE_IEEE802_15_4
+    NETWORK = LINKTYPE_BLUETOOTH_LE_LL
 
     PCAP_GLOBAL_HDR_FMT = '<LHHlLLL'
 
@@ -297,6 +298,7 @@ class CC2531:
 
     HEARTBEAT_FRAME = 0x01
     COMMAND_FRAME = 0x00
+    COMMAND_KEEPALIVE = 0x01
 
     #     COMMAND_CHANNEL = ??
 
@@ -312,7 +314,7 @@ class CC2531:
         self.running = False
 
         try:
-            self.dev = usb.core.find(idVendor=0x0451, idProduct=0x16ae)
+            self.dev = usb.core.find(idVendor=0x0451, idProduct=0x16b3)
         except usb.core.USBError:
             raise OSError(
                 "Permission denied, you need to add an udev rule for this device",
@@ -392,6 +394,7 @@ class CC2531:
                         frame = payload[5:]
 
                         if len(frame) == pktLen:
+                            frame = frame[:-2]
                             self.callback(timestamp, frame.tobytes())
                         else:
                             logger.warning(
@@ -412,7 +415,7 @@ class CC2531:
     def set_channel(self, channel):
         was_running = self.running
 
-        if channel >= 11 and channel <= 26:
+        if channel >= 36 and channel <= 39:
             if self.running:
                 self.stop()
 
@@ -459,7 +462,7 @@ def arg_parser():
         '--channel',
         type=int,
         action='store',
-        choices=list(range(11, 27)),
+        choices=list(range(36, 39)),
         default=defaults['channel'],
         help='Set the sniffer\'s CHANNEL. Valid range: 11-26. \
                                   (Default: %s)' % (defaults['channel'], ))
@@ -655,7 +658,7 @@ if __name__ == '__main__':
                                 snifferDev.stop()
                             else:
                                 snifferDev.start()
-                        elif int(cmd) in range(11, 27):
+                        elif int(cmd) in range(36, 39):
                             snifferDev.set_channel(int(cmd))
                         else:
                             raise ValueError

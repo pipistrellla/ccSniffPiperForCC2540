@@ -13,7 +13,7 @@
 # get channel or set default
 CHANNEL=$1
 if [ -z "$CHANNEL" ]; then
-    CHANNEL=26
+    CHANNEL=36
 fi
 
 # start the sniffer and fork in background
@@ -30,4 +30,4 @@ fi
 trap 'kill $SNIFFER_PID' EXIT
 
 # start wireshark immediately
-wireshark -k -i /tmp/ccsniffpiper
+sudo wireshark -k -i /tmp/ccsniffpiper
