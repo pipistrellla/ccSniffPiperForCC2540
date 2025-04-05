@@ -433,7 +433,7 @@ class CC2531:
                 self.start()
 
         else:
-            raise ValueError("Channel must be between 11 and 26")
+            raise ValueError("Channel must be between 37 and 39")
 
     def get_channel(self):
         return self.channel
@@ -464,7 +464,7 @@ def arg_parser():
         action='store',
         choices=list(range(36, 39)),
         default=defaults['channel'],
-        help='Set the sniffer\'s CHANNEL. Valid range: 11-26. \
+        help='Set the sniffer\'s CHANNEL. Valid range: 37-39. \
                                   (Default: %s)' % (defaults['channel'], ))
     out_group = parser.add_argument_group('Output Options')
     out_group.add_argument(
@@ -615,7 +615,7 @@ if __name__ == '__main__':
         h.write('c: Print current RF Channel\n')
         h.write('n: Trigger new pcap header before the next frame\n')
         h.write('h,?: Print this message\n')
-        h.write('[11,26]: Change RF channel\n')
+        h.write('[37,39]: Change RF channel\n')
         h.write('s: Start/stop the packet capture\n')
         h.write('q: Quit')
         h = h.getvalue()
