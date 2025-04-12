@@ -358,7 +358,8 @@ class CC2531:
     def stop(self):
         # end sniffing
         self.running = False
-        self.thread.join()
+        if threading.current_thread() != self.thread:
+            self.thread.join()
         self.dev.ctrl_transfer(CC2531.DIR_OUT, CC2531.SET_STOP)
 
     def isRunning(self):
@@ -384,6 +385,7 @@ class CC2531:
             if len(bytesteam) >= 3:
                 (cmd, cmdLen) = struct.unpack_from("<BH", bytesteam)
                 payload = bytesteam[3:]
+
                 if len(payload) == cmdLen:
                     # buffer contains the correct number of bytes
                     if CC2531.COMMAND_FRAME == cmd:
@@ -392,7 +394,7 @@ class CC2531:
                         (timestamp,
                          pktLen) = struct.unpack_from("<IB", payload)
                         frame = payload[5:]
-
+                        count = 0
                         if len(frame) == pktLen:
                             frame = frame[:-2]
                             self.callback(timestamp, frame.tobytes())
@@ -406,11 +408,16 @@ class CC2531:
                     #     # We'll only ever see this if the user asked for it, so we are
                     #     # running interactive.
                     elif CC2531.HEARTBEAT_FRAME == cmd:
-                        logger.debug(f'Heartbeat - {payload[0]}')
+                        count=count+1
+                        if count > 8:
+                        	 print('no package, returning to 37 channel')
+                        	 self.set_channel(37)
                     else:
                         logger.warning(
                             'Received a command response with unknown code - CMD:{:02x} byte:{}'
                             .format(cmd, bytesteam))
+                            
+
 
     def set_channel(self, channel):
         was_running = self.running
